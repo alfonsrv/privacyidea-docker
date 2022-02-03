@@ -1,0 +1,27 @@
+version: 1
+formatters:
+  detail:
+    class: privacyidea.lib.log.SecureFormatter
+    format: '[%(asctime)s][%(process)d][%(thread)d][%(levelname)s][%(name)s:%(lineno)d] %(message)s'
+
+handlers:
+  file:
+    class: logging.handlers.RotatingFileHandler
+    backupCount: 5
+    maxBytes: 1000000
+    formatter: detail
+    level: INFO
+    filename: /var/log/privacyidea/privacyidea.log
+  stdout:
+    class: logging.StreamHandler
+    formatter: detail
+    level: INFO
+loggers:
+  # The logger name is the qualname
+  privacyidea:
+    handlers:
+    - file
+    - stdout
+    level: INFO
+root:
+  level: WARNING

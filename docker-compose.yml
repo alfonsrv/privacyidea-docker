@@ -1,0 +1,50 @@
+version: "3.4"
+
+services:
+  privacyidea:
+    container_name: privacyidea
+    build:
+      context: ./privacyidea
+      args:
+        SERVER_NAME: ${SERVER_NAME}
+        PRIVACYIDEA_VERSION: ${PRIVACYIDEA_VERSION}
+    entrypoint: /opt/privacyidea/entrypoint.sh
+    command: /usr/sbin/apache2ctl -D FOREGROUND
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      - TZ=${TZ:-Europe/Berlin}
+    env_file:
+      - .env
+    volumes:
+       - ./data/privacyidea:/etc/privacyidea
+       - type: bind
+        source: ./data/logo.png
+        target: privacyidea/static/css/logo.png
+      # Certificates and private keys
+      - ./data/keys:/etc/privacyidea/keys
+      - type: bind
+        source: ./data/certs/apache/apache.pem
+        target: /etc/ssl/certs/privacyideaserver.pem
+      - type: bind
+        source: ./data/certs/apache/apache.key
+        target: /etc/ssl/private/privacyideaserver.key
+      - ./data/policies:/opt/privacyidea/policies
+    ports:
+      - "80:80"
+      - "443:443"
+
+  db:
+    container_name: privacyidea-mysql
+    restart: unless-stopped
+    image: mariadb:10.5
+    command: --default-authentication-plugin=mysql_native_password --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=1
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - TZ=${TZ:-Europe/Berlin}
+    volumes:
+      - ./data/mysql:/var/lib/mysql
